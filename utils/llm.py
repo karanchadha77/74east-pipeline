@@ -20,7 +20,14 @@ import os
 import subprocess
 import json
 import re
+import shutil
 from abc import ABC, abstractmethod
+
+
+def claude_cmd() -> str:
+    """Resolve the claude CLI executable. On Windows npm installs it as
+    claude.cmd, which subprocess can't find under the bare name "claude"."""
+    return shutil.which("claude") or "claude"
 
 
 class LLMBackend(ABC):
@@ -59,10 +66,12 @@ class ClaudeCLIBackend(LLMBackend):
         timeout = timeout or self.default_timeout
         env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
         result = subprocess.run(
-            ["claude", "-p", "--output-format", "json"],
+            [claude_cmd(), "-p", "--output-format", "json"],
             input=prompt,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             env=env,
         )

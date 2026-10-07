@@ -1,14 +1,14 @@
 #!/bin/bash
-# Uninstall Prabhjot's Pipeline LaunchAgent
+# Uninstall 74East Pipeline LaunchAgent
 
-PLIST_NAME="com.prabhjot-pipeline.dashboard"
+PLIST_NAME="com.74east-pipeline.dashboard"
 PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_NAME}.plist"
 
 if [ -f "$PLIST_PATH" ]; then
-    echo "Stopping Prabhjot's Pipeline..."
+    echo "Stopping 74East Pipeline..."
     launchctl unload "$PLIST_PATH" 2>/dev/null || true
     rm -f "$PLIST_PATH"
-    echo "Prabhjot's Pipeline LaunchAgent removed."
+    echo "74East Pipeline LaunchAgent removed."
 else
-    echo "Prabhjot's Pipeline LaunchAgent not found."
+    echo "74East Pipeline LaunchAgent not found."
 fi

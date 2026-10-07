@@ -1,5 +1,5 @@
 /**
- * Prabhjot's Pipeline — Job Intelligence Dashboard
+ * 74East Pipeline — Client Intelligence Dashboard
  *
  * Alpine.js application with:
  * - Real-time WebSocket event feed

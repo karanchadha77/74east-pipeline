@@ -17,6 +17,7 @@ import re
 import hashlib
 from pathlib import Path
 from typing import Optional
+from utils.llm import claude_cmd
 
 def CACHE_DIR_FN():
     from utils.usercontext import cache_dir
@@ -46,7 +47,7 @@ class ClaudeBrain:
 
         try:
             result = subprocess.run(
-                ["claude", "--version"],
+                [claude_cmd(), "--version"],
                 capture_output=True, text=True, timeout=10
             )
             if result.returncode != 0:
@@ -85,10 +86,12 @@ class ClaudeBrain:
         # Fallback: direct Claude CLI (original behavior)
         env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
         result = subprocess.run(
-            ["claude", "-p", "--output-format", "json"],
+            [claude_cmd(), "-p", "--output-format", "json"],
             input=prompt,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             env=env
         )
@@ -151,6 +154,8 @@ class ClaudeBrain:
 
     def match_job(self, job_description: str, profile: dict, resume_text: str = "") -> dict:
         """Score a job posting against the user's profile with enhanced context."""
+        if profile.get("firm"):
+            return self.match_client_lead(job_description, profile, resume_text)
         # Build enhanced profile context
         skills = profile.get("skills", {})
         primary_skills = ", ".join(skills.get("primary", profile["preferences"].get("keywords", [])))
@@ -196,6 +201,65 @@ Scoring guidelines:
 - If the company is in the favorites list, add 10 bonus points (max 100)
 - Set "apply" to true only if score >= {profile['preferences'].get('min_match_score', 65)}
 - Write the cover_letter ONLY if score >= {profile['preferences'].get('min_match_score', 65)}; otherwise set cover_letter to "" — do not waste effort on poor matches
+"""
+        return self.ask_json(prompt, component="scoring")
+
+    def match_client_lead(self, job_description: str, profile: dict, resume_text: str = "") -> dict:
+        """Client-hunt mode: score a job posting as a sales lead for the firm in profile['firm'].
+
+        The hiring company is the prospect, not the employer. Returns the same JSON
+        keys as the job-seeker prompt so the tracker and dashboard work unchanged:
+        "apply" means "pursue this lead" and "cover_letter" holds the outreach pitch.
+        """
+        firm = profile["firm"]
+        min_score = profile["preferences"].get("min_match_score", 65)
+        favorites = profile.get("favorite_companies", [])
+
+        prompt = f"""You are a lead qualification engine for {firm.get('name', 'an outsourced services firm')}. Be critical and honest.
+
+A company has posted a job. The hiring company is a PROSPECT. Decide whether the firm below
+could do this work for them as an outsourced retainer instead of (or alongside) the hire.
+An on-site or full-time posting is NOT disqualifying by itself: an owner hiring an Accounting
+Manager or Controller is a buying signal for a fractional/outsourced controller. Judge the
+company, its industry and the scope of work, not whether a person could take the job.
+
+FIRM BRIEF:
+{firm.get('brief', '')[:6000]}
+
+ADDITIONAL FIRM MATERIAL:
+{resume_text[:2000] if resume_text else '(none)'}
+
+Favorite / priority prospects (bonus +10 if match): {', '.join(favorites) or '(none)'}
+
+JOB POSTING:
+{job_description[:8000]}
+
+Return this exact JSON structure:
+{{
+  "score": <integer 0-100>,
+  "apply": <true or false — true means pursue this company as a client lead>,
+  "reasoning": "<one sentence: why this company is or isn't a good client lead>",
+  "title_match": "<engagement type this maps to, e.g. fractional controller retainer, books cleanup, AP back office, or 'none'>",
+  "skill_overlap": ["<firm capabilities that match the work described>"],
+  "missing_skills": ["<work they need that the firm does not do or is out of scope>"],
+  "red_flags": ["<skip criteria hit: US residency/CPA signature/on-site required, tax/payroll-only, low budget, no remote systems access, etc.>"],
+  "cover_letter": "<short outreach pitch to the owner/hiring manager, or empty string — see rule below>",
+  "improve_match": "<best angle to pitch, or the buying signal to look for before reaching out>"
+}}
+
+Scoring guidelines:
+- 90-100: US freight brokerage/3PL/trucking company needing controller-level, recurring accounting work; buying signals present (factoring, multiple entities, messy/late books, lender needs financials, bookkeeper left, rapid growth)
+- 70-89: US freight/logistics company with recurring accounting needs, or a non-freight US SMB clearly needing controller-level outsourced work (likely USD 3,000+/month)
+- 50-69: Plausible but weak — scope unclear, mostly bookkeeping, or industry outside the firm's focus
+- Below 50: Skip — tax/payroll-only, hourly data entry, large enterprise with an in-house finance team, non-US company, roles legally requiring a US CPA signature or US residency, or work the firm does not do
+- Recruiting agencies posting on behalf of an unnamed client: cap the score at 60
+- If the company is in the favorites list, add 10 bonus points (max 100)
+- Set "apply" to true only if score >= {min_score}
+- Write the cover_letter ONLY if score >= {min_score}; otherwise set it to "".
+  Pitch rules: written as {firm.get('lead', 'the founder')}, the named lead, with the team behind him; 120-180 words;
+  reference specifics from the posting; offer the firm as an outsourced alternative to the hire;
+  cite only capabilities and anonymized proof points from the brief — never invent clients, numbers or credentials;
+  end with a low-commitment call to action (short call). No subject line, no placeholders.
 """
         return self.ask_json(prompt, component="scoring")
 

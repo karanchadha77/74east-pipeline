@@ -1,5 +1,5 @@
 """
-Prabhjot's Pipeline Dashboard — FastAPI server with REST API and WebSocket support.
+74East Pipeline Dashboard — FastAPI server with REST API and WebSocket support.
 Serves a local web dashboard at http://localhost:8080.
 
 Architecture notes:
@@ -80,7 +80,7 @@ async def lifespan(app):
     except Exception:
         pass
 
-app = FastAPI(title="Prabhjot's Pipeline", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="74East Pipeline", version="1.0.0", lifespan=lifespan)
 
 
 # ---------------------------------------------------------------------------
@@ -237,7 +237,7 @@ async def _auth_middleware(request: Request, call_next):
         if not _basic_auth_ok(request.headers.get("authorization")):
             return Response(
                 status_code=401,
-                headers={"WWW-Authenticate": 'Basic realm="Prabhjot\'s Pipeline"'},
+                headers={"WWW-Authenticate": 'Basic realm="74East Pipeline"'},
             )
     return await call_next(request)
 

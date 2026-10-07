@@ -1,10 +1,10 @@
 #!/bin/bash
-# Install Prabhjot's Pipeline as a macOS LaunchAgent (runs on login, restarts on crash)
+# Install 74East Pipeline as a macOS LaunchAgent (runs on login, restarts on crash)
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PLIST_NAME="com.prabhjot-pipeline.dashboard"
+PLIST_NAME="com.74east-pipeline.dashboard"
 PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_NAME}.plist"
 LOG_DIR="$SCRIPT_DIR/logs"
 PYTHON="python3.11"
@@ -16,7 +16,7 @@ fi
 
 mkdir -p "$LOG_DIR"
 
-echo "Installing Prabhjot's Pipeline LaunchAgent..."
+echo "Installing 74East Pipeline LaunchAgent..."
 echo "  Project: $SCRIPT_DIR"
 echo "  Python: $PYTHON"
 echo "  Logs: $LOG_DIR"
@@ -62,7 +62,7 @@ launchctl unload "$PLIST_PATH" 2>/dev/null || true
 launchctl load "$PLIST_PATH"
 
 echo ""
-echo "Prabhjot's Pipeline installed and started!"
+echo "74East Pipeline installed and started!"
 echo "  Dashboard: http://localhost:8080"
 echo "  Logs: $LOG_DIR/server.log"
 echo "  To stop: bash $SCRIPT_DIR/service/uninstall.sh"

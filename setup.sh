@@ -1,11 +1,11 @@
 #!/bin/bash
 # ============================================
-# Prabhjot's Pipeline Setup Script
+# 74East Pipeline Setup Script
 # ============================================
 
 set -e
 
-echo "🚀 Prabhjot's Pipeline Setup"
+echo "🚀 74East Pipeline Setup"
 echo "================="
 echo ""
 
@@ -30,7 +30,7 @@ if ! command -v claude &> /dev/null; then
     echo ""
     echo "📦 Installing Claude Code CLI..."
     npm install -g @anthropic-ai/claude-code
-    echo "⚠️  Run 'claude auth' to authenticate before using Prabhjot's Pipeline."
+    echo "⚠️  Run 'claude auth' to authenticate before using 74East Pipeline."
 else
     echo "✅ Claude CLI: $(claude --version 2>/dev/null || echo 'installed')"
 fi

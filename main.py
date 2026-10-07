@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Prabhjot's Pipeline — AI-Powered Job Intelligence
+74East Pipeline — AI-Powered Job Intelligence
 ======================================
 
 Uses Claude Code CLI as the AI brain + Playwright for browser automation.
@@ -475,7 +475,7 @@ async def cmd_rescore(profile: dict):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Prabhjot's Pipeline — AI-Powered Job Intelligence",
+        description="74East Pipeline — AI-Powered Job Intelligence",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
